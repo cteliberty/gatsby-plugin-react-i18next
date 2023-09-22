@@ -1,7 +1,7 @@
 import {CreatePageArgs, Page} from 'gatsby';
 import BP from 'bluebird';
 import {match} from 'path-to-regexp';
-import {PageContext, PageOptions, PluginOptions} from '../types';
+import {PageContext, PageOptions, PluginOptions, SlugLocales} from '../types';
 
 export const onCreatePage = async (
   {page, actions}: CreatePageArgs<PageContext>,
@@ -95,7 +95,7 @@ export const onCreatePage = async (
   createPage(newPage);
 
   await BP.map(alternativeLanguages, async (lng) => {
-    const localePage = await generatePage({
+    let localePage = await generatePage({
       language: lng,
       path: `${lng}${page.path}`,
       matchPath: page.matchPath ? `/${lng}${page.matchPath}` : undefined,
@@ -108,6 +108,25 @@ export const onCreatePage = async (
     if (localePage.matchPath !== undefined) {
       localePage.matchPath = `/${lng}${localePage.matchPath}`;
     }
+
+    if (page.context?.allSlugLocales) {
+      const allSlugLocales = page.context.allSlugLocales;
+
+      await allSlugLocales.forEach(async (slugLocales: SlugLocales) => {
+        if (slugLocales.locale !== defaultLanguage) {
+          const subUrl = page.context?.subUrl ? `${page.context?.subUrl}/` : '';
+          localePage = await generatePage({
+            language: slugLocales.locale,
+            path: `/${slugLocales.locale}/${subUrl}${slugLocales.value}`,
+            matchPath: page.matchPath
+              ? `/${slugLocales.locale}/${subUrl}${slugLocales.value}`
+              : undefined,
+            routed: true
+          });
+        }
+      });
+    }
+
     createPage(localePage);
   });
 };

@@ -38,10 +38,17 @@ export type I18NextContext = {
   siteUrl?: string;
 };
 
+export type SlugLocales = {
+  locale: string;
+  value: string;
+};
+
 export type PageContext = {
   path?: string;
   language: string;
   i18n: I18NextContext;
+  allSlugLocales?: SlugLocales[];
+  subUrl?: string;
 };
 
 // Taken from https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-filesystem/index.d.ts
